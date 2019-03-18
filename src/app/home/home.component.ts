@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MoviesService } from '../movies.service';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2'
 
 @Component({
   selector: 'app-home',
@@ -21,7 +22,8 @@ export class HomeComponent implements OnInit {
 
   ngOnInit() {
     if (!localStorage.getItem('user')) {
-      this.router.navigate(['/login'])
+      Swal.fire('Oops...', 'Something went wrong!', 'error');
+      this.router.navigate(['/login']);
     }
   }
 
