@@ -14,6 +14,7 @@ const routes: Routes = [
   { path: 'movies', component: MoviesComponent },
   { path: 'movies/:name', component: MoviesComponent },
   { path: 'recom', component: RecomComponent },
+  { path: 'recom/:name', component: RecomComponent },
   { path: '**', component: LoginComponent }
 ];
 

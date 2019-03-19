@@ -20,19 +20,20 @@ ratings_mean_count['rating_counts'] = pd.DataFrame(movie_data.groupby('title')['
 user_movie_rating = movie_data.pivot_table(index='userId', columns='title', values='rating')
 user_movie_rating.head()
 
-forrest_gump_ratings = user_movie_rating['Forrest Gump (1994)']
+#movie rating array
+current_movie_ratings = user_movie_rating['Caddyshack (1980)']
 
-forrest_gump_ratings.head()
+current_movie_ratings.head()
 
-movies_like_forrest_gump = user_movie_rating.corrwith(forrest_gump_ratings)
+movies_like_current_movie = user_movie_rating.corrwith(current_movie_ratings)
 
-corr_forrest_gump = pd.DataFrame(movies_like_forrest_gump, columns=['Correlation'])
-corr_forrest_gump.dropna(inplace=True)
-corr_forrest_gump.head()
+corr_cuurent_movie = pd.DataFrame(movies_like_current_movie, columns=['Correlation'])
+corr_cuurent_movie.dropna(inplace=True)
+corr_cuurent_movie.head()
 
-corr_forrest_gump.sort_values('Correlation', ascending=False).head(10)
+corr_cuurent_movie.sort_values('Correlation', ascending=False).head(10)
 
-corr_forrest_gump = corr_forrest_gump.join(ratings_mean_count['rating_counts'])
-corr_forrest_gump.head()
+corr_cuurent_movie = corr_cuurent_movie.join(ratings_mean_count['rating_counts'])
+corr_cuurent_movie.head()
 
-print(corr_forrest_gump[corr_forrest_gump ['rating_counts'] > 50].sort_values('Correlation', ascending=False).head())
+print(corr_cuurent_movie[corr_cuurent_movie ['rating_counts'] > 50].sort_values('Correlation', ascending=False).head(20))

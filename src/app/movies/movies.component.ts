@@ -13,25 +13,28 @@ export class MoviesComponent implements OnInit {
   user: Object; 
   movieData: Object;
   currentData;
+  showLoader:boolean;
 
-  constructor(private Movies: MoviesService, private activatedRoute: ActivatedRoute, private router: Router) { }
+  constructor(private Movies: MoviesService, private activatedRoute: ActivatedRoute, private router: Router) {
+    this.user = JSON.parse(localStorage.getItem('user'));
+  }
 
   ngOnInit() {
+    this.showLoader = true;
     if (!localStorage.getItem('user')) {
       Swal.fire('Oops...', "You're not logged in!", 'error');
       this.router.navigate(['/login']);
     }
-    this.user = JSON.parse(localStorage.getItem('user'));
     this.activatedRoute.params.subscribe(params => {
       this.Movies.getMovieDetail(params.name).subscribe(res => {
         this.movieData = res;
-        this.currentData = res['imdbRating'];
-      });
+        this.showLoader = false;
+      }); 
     });
   }
 
   submitRating(rateIndex){
     rateIndex = this.currentData;
-    firebase.database().ref('movierating/').push({userDetail: this.user, userRating: rateIndex, moviedata: this.movieData});
+    firebase.database().ref('movierating/').push({userId: this.user['userid'], userRating: rateIndex, movieName: this.movieData['Title']});
   }   
 }

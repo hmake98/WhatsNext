@@ -7,6 +7,9 @@ from flask import request, jsonify
 import json
 import ast
 import imp
+import numpy as np
+import pandas as pd
+import pymongo
 
 
 # Import the helpers module
@@ -38,68 +41,74 @@ def create_user():
     """
        Function to create new users.
        """
-    try:
-        # Create new users
-        try:
-            body = ast.literal_eval(json.dumps(request.get_json()))
-        except:
-            # Bad request as request body is not available
-            # Add message for debugging purpose
-            return "", 400
+    data = request.data
+    dataDict = json.loads(data)
+    print(dataDict['title'])
 
-        record_created = collection.insert(body)
+    # Recommander 
 
-        # Prepare the response
-        if isinstance(record_created, list):
-            # Return list of Id of the newly created item
-            return jsonify([str(v) for v in record_created]), 201
-        else:
-            # Return Id of the newly created item
-            return jsonify(str(record_created)), 201
-    except:
-        # Error while trying to create the resource
-        # Add message for debugging purpose
-        return "", 500
+    myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+    mydb = myclient['whatsnext']
 
+    ratings = mydb['ratings']
+    movies = mydb['movies']
 
-@app.route("/api/v1/movies", methods=['GET'])
-def fetch_users():
-    """
-       Function to fetch the movies.
-       """
-    try:
-        # Call the function to get the query params
-        query_params = helper_module.parse_query_params(request.query_string)
-        # Check if dictionary is not empty
-        if query_params:
+    ratings_data = pd.DataFrame(list(ratings.find()))
+    movie_names = pd.DataFrame(list(movies.find()))
 
-            # Try to convert the value to int
-            query = {k: int(v) if isinstance(v, str) and v.isdigit() else v for k, v in query_params.items()}
+    movie_data = pd.merge(ratings_data, movie_names, on="movieId")
+    movie_data.groupby('title')['rating'].count().sort_values(ascending=False).head()
 
-            # Fetch all the record(s)
-            records_fetched = movies.find(query)
+    ratings_mean_count = pd.DataFrame(movie_data.groupby('title')['rating'].mean())  
+    ratings_mean_count['rating_counts'] = pd.DataFrame(movie_data.groupby('title')['rating'].count())  
 
-            # Check if the records are found
-            if records_fetched.count() > 0:
-                # Prepare the response
-                return dumps(records_fetched)
-            else:
-                # No records are found
-                return "", 404
+    user_movie_rating = movie_data.pivot_table(index='userId', columns='title', values='rating')
+    user_movie_rating.head()
 
-        # If dictionary is empty
-        else:
-            # Return all the records as query string parameters are not available
-            if movies.find().count > 0:
-                # Prepare response if the users are found
-                return jsonify(movies.find())
-            else:
-                # Return empty array if no users are found
-                return jsonify([])
-    except:
-        # Error while trying to fetch the resource
-        # Add message for debugging purpose
-        return "", 500
+    # movie rating array
+    current_movie_ratings = user_movie_rating[dataDict['title']]
+
+    current_movie_ratings.head()
+
+    movies_like_current_movie = user_movie_rating.corrwith(current_movie_ratings)
+
+    corr_cuurent_movie = pd.DataFrame(movies_like_current_movie, columns=['Correlation'])
+    corr_cuurent_movie.dropna(inplace=True)
+    corr_cuurent_movie.head()
+
+    corr_cuurent_movie.sort_values('Correlation', ascending=False).head(10)
+
+    corr_cuurent_movie = corr_cuurent_movie.join(ratings_mean_count['rating_counts'])
+    corr_cuurent_movie.head()
+
+    return corr_cuurent_movie[corr_cuurent_movie ['rating_counts'] > 50].sort_values('Correlation', ascending=False).head(10).to_json()
+
+    # try:
+    #     # Create new users
+    #     try:
+    #         data = request.data
+    #         dataDict = json.loads(data)
+    #         # body = ast.literal_eval(json.dumps(request.get_json()))
+    #         print(dataDict)
+    #     except:
+    #         # Bad request as request body is not available
+    #         # Add message for debugging purpose
+    #         return "", 400
+
+    #     #record_created = collection.insert(body)
+
+    #     # Prepare the response
+    #     if isinstance(record_created, list):
+    #         # Return list of Id of the newly created item
+    #         return jsonify([str(v) for v in record_created]), 201
+    #     else:
+    #         # Return Id of the newly created item
+    #         return jsonify(str(record_created)), 201
+    # except:
+    #     # Error while trying to create the resource
+    #     # Add message for debugging purpose
+    #     return "", 500
+
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -108,7 +117,7 @@ def page_not_found(e):
     message = {
         "err":
             {
-                "msg": "This route is currently not supported. Please refer API documentation."
+                "msg": "This route is currently not supported."
             }
     }
     # Making the message looks good
