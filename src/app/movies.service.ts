@@ -21,12 +21,12 @@ export class MoviesService {
   }
 
   getMovies(name) {
-    let url = `http://www.omdbapi.com/?s=${name}&apikey=b731334c`;
+    let url = `http://www.omdbapi.com/?s=${name}&apikey=`;
     return this.http.get(url);
   }
 
   getMovieDetail(name) {
-    let url = `http://www.omdbapi.com/?t=${name}&apikey=b731334c`;
+    let url = `http://www.omdbapi.com/?t=${name}&apikey=`;
     return this.http.get(url);
   }
 

@@ -5,12 +5,7 @@
 export const environment = {
   production: false,
   firebaseConfig: {
-    apiKey: "AIzaSyDGUxvdsp-e3P4nnL5rinU_UmWpslM-CGg",
-    authDomain: "whatnext-d6110.firebaseapp.com",
-    databaseURL: "https://whatnext-d6110.firebaseio.com",
-    projectId: "whatnext-d6110",
-    storageBucket: "whatnext-d6110.appspot.com",
-    messagingSenderId: "261311383003"
+    
   }
 };
 
